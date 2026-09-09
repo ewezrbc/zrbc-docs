@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inbound紀錄「備注」欄位填寫規則說明</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root {
+    --ink: #1B2430;
+    --muted: #5B6472;
+    --bg: #F5F6F4;
+    --card: #FFFFFF;
+    --rule: #D8DCE1;
+    --good: #1F7A4D;
+    --good-bg: #E7F5EC;
+    --good-border: #BFE3CD;
+    --bad: #B3261E;
+    --bad-bg: #FBE9E7;
+    --bad-border: #F3C6C1;
+    --warn: #8A5A00;
+    --warn-bg: #FCF1DC;
+    --warn-border: #EFD9A6;
+    --mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: 'Public Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+  }
+
+  header.doc-header {
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+  }
+
+  header.doc-header h1 {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+  }
+
+  header.doc-header p {
+    color: var(--muted);
+    font-size: 16px;
+    margin: 0;
+    max-width: 60ch;
+  }
+
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 48px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2 .mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  h2 .mark.good { background: var(--good-bg); color: var(--good); }
+  h2 .mark.bad { background: var(--bad-bg); color: var(--bad); }
+  h2 .mark.warn { background: var(--warn-bg); color: var(--warn); }
+  h2 .mark.note { background: #EAEDF0; color: var(--muted); }
+
+  p { margin: 0 0 14px; }
+
+  .rule-callout {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-left: 5px solid var(--ink);
+    border-radius: 4px;
+    padding: 22px 24px;
+    margin: 20px 0 8px;
+  }
+
+  .rule-callout .label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .rule-callout .core {
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+
+  .rule-callout code {
+    font-family: var(--mono);
+    background: #EFF1F3;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+
+  .takeaway {
+    margin-top: 14px;
+    padding: 16px 20px;
+    background: var(--ink);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 15.5px;
+    font-weight: 500;
+    line-height: 1.6;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 8px;
+    font-size: 14.5px;
+  }
+
+  th {
+    text-align: left;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  td {
+    padding: 12px 12px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  td.code, th.code-col {
+    font-family: var(--mono);
+    font-size: 13.5px;
+  }
+
+  tr.good-row td:nth-child(2) { color: var(--good); font-weight: 600; }
+  tr.bad-row td:nth-child(2) { color: var(--bad); font-weight: 600; }
+
+  .why {
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+
+  .example-block {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin: 14px 0;
+  }
+
+  .example-block .line {
+    font-family: var(--mono);
+    font-size: 14px;
+    padding: 4px 0;
+  }
+
+  /* 候選清單真實卡片模擬 */
+  .mock-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 10px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .mock-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    background: #2563EB;
+    flex-shrink: 0;
+    margin-top: 2px;
+    position: relative;
+  }
+
+  .mock-checkbox::after {
+    content: "";
+    position: absolute;
+    left: 5px;
+    top: 2px;
+    width: 5px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  .mock-card .title {
+    color: #C0392B;
+    font-weight: 700;
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+
+  .mock-card .meta {
+    color: var(--muted);
+    font-size: 13px;
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .flag {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .flag.not-po {
+    background: var(--warn-bg);
+    color: var(--warn);
+    border: 1px solid var(--warn-border);
+  }
+
+  ul.tip-list {
+    margin: 10px 0 0;
+    padding-left: 20px;
+  }
+
+  ul.tip-list li {
+    margin-bottom: 8px;
+  }
+
+  footer.doc-footer {
+    margin-top: 56px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 36px 16px 72px; }
+    header.doc-header h1 { font-size: 25px; }
+    table, thead, tbody, th, td, tr { display: block; }
+    th { display: none; }
+    td { border-bottom: none; padding: 4px 0; }
+    tr { border-bottom: 1px solid var(--rule); padding: 12px 0; }
+    tr:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="doc-header">
+    <h1>Inbound紀錄「備注」欄位填寫規則說明</h1>
+    <p>工作類型選 Inbound 時,備注裡的PO號由系統自動判斷,用來產生入庫紀錄導出報表跟日報彙整。填寫方式不一致,系統可能會誤判。</p>
+  </header>
+
+  <h2><span class="mark note">＝</span>核心規則</h2>
+  <div class="rule-callout">
+    <div class="label">判斷邏輯</div>
+    <div class="core">
+      系統從備注最前面開始讀,只要是<strong>英文字母、數字、破折號(<code>-</code>)</strong>就當作PO號的一部分,<strong>遇到空格、中文字、標點就停下來</strong>。
+    </div>
+  </div>
+  <div class="takeaway">PO號打完之後,記得空一格或直接接中文字再寫備注,就不會出錯。</div>
+
+  <h2><span class="mark good">✓</span>正確範例</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="code-col">備注寫法</th>
+        <th>系統辨識出的PO號</th>
+        <th>說明</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="good-row">
+        <td class="code">RGBR-260907-01</td>
+        <td class="code">RGBR-260907-01</td>
+        <td class="why">單純PO號,沒問題</td>
+      </tr>
+      <tr class="good-row">
+        <td class="code">RGBR-260907-01 這批有損壞</td>
+        <td class="code">RGBR-260907-01</td>
+        <td class="why">PO後面空一格再寫備注,正確切開</td>
+      </tr>
+      <tr class="good-row">
+        <td class="code">218C126還未結束</td>
+        <td class="code">218C126</td>
+        <td class="why">PO後面直接接中文,中文會擋住,正確切開</td>
+      </tr>
+      <tr class="good-row">
+        <td class="code">#T4259 已完成</td>
+        <td class="code">#T4259</td>
+        <td class="why"><code>#</code>開頭也支援,空格後接備注正確切開</td>
+      </tr>
+      <tr class="good-row">
+        <td class="code">Kmart-Transfer61</td>
+        <td class="code">KMART-TRANSFER61</td>
+        <td class="why">不管排列方式,連續英數字加破折號都認得</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2><span class="mark bad">✕</span>錯誤範例</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="code-col">備注寫法</th>
+        <th>系統誤判成</th>
+        <th>問題出在哪</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bad-row">
+        <td class="code">PUR0003702523箱都點完了</td>
+        <td class="code">PUR0003702523</td>
+        <td class="why">PO號後面直接黏著數字(沒空格、沒中文擋著),多算了一個「3」進去,PO號變成錯的</td>
+      </tr>
+      <tr class="bad-row">
+        <td class="code">123456ABCDEF</td>
+        <td class="code">123456ABCDEF</td>
+        <td class="why">本意若是PO「123456ABC」+備注「DEF」,英文字母直接黏著英文字母,會被整個當成PO</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="margin-top:4px;"><strong>共同原因:</strong>PO號後面完全沒有分隔,直接接著寫英文字母或數字,系統分不清楚哪裡是PO結尾、哪裡是備注開頭。<strong>解法:</strong>PO號打完之後,習慣性按一下空白鍵,再繼續打備注文字。</p>
+
+  <h2><span class="mark warn">!</span>純粹描述狀況、沒有PO號的備注——實際導出畫面長怎樣</h2>
+  <p>如果這筆Inbound紀錄本來就沒有對應的PO號,只是單純寫狀況說明,系統會把<strong>整段文字</strong>當成一個項目名稱,跟真正的PO一起出現在「入庫紀錄導出」的候選清單裡,長得跟真正的PO卡片一模一樣,而且<strong>預設是打勾狀態</strong>:</p>
+
+  <div class="mock-card">
+    <div class="mock-checkbox"></div>
+    <div>
+      <div class="title">2026-09-08 - Pedal Mafia - PO: 系統入庫<span class="flag not-po">非真實PO</span></div>
+      <div class="meta">共 1人 (Jane) / 總工時: 2.7hr</div>
+    </div>
+  </div>
+  <div class="mock-card">
+    <div class="mock-checkbox"></div>
+    <div>
+      <div class="title">2026-09-08 - Pedal Mafia - PO: 整理<span class="flag not-po">非真實PO</span></div>
+      <div class="meta">共 1人 (Jane) / 總工時: 1hr</div>
+    </div>
+  </div>
+  <div class="mock-card">
+    <div class="mock-checkbox"></div>
+    <div>
+      <div class="title">2026-09-04 - Selima - PO: MEMORY<span class="flag not-po">非真實PO</span></div>
+      <div class="meta">共 1人 (Abby) / 總工時: 1hr</div>
+    </div>
+  </div>
+
+  <p style="margin-top:18px;"><strong>匯出報表前,請掃一眼候選清單</strong>——如果「PO:」後面接的是一整句話或明顯不是PO格式的文字,代表這筆是狀況描述、不是真正的PO,依情況決定要不要取消勾選,不列入這次的導出報表。</p>
+
+  <footer class="doc-footer">
+    Inbound紀錄PO號填寫規則說明 · 內部參考文件
+  </footer>
+
+</div>
+</body>
+</html>
